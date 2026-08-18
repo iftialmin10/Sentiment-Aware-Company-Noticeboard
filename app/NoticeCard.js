@@ -14,9 +14,35 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
+import { MOODS } from "../lib/classificationContract";
+
+const MOOD_STYLES = Object.freeze({
+  [MOODS.BAD]: Object.freeze({
+    label: "Negative",
+    backgroundColor: "#fff7f7",
+    borderColor: "#ef9a9a",
+    chipBackgroundColor: "#fee4e2",
+    chipColor: "#7a271a",
+  }),
+  [MOODS.NORMAL]: Object.freeze({
+    label: "Neutral",
+    backgroundColor: "#ffffff",
+    borderColor: "#d7dce3",
+    chipBackgroundColor: "#eef2f6",
+    chipColor: "#344054",
+  }),
+  [MOODS.GOOD]: Object.freeze({
+    label: "Positive",
+    backgroundColor: "#f3fbf5",
+    borderColor: "#81c995",
+    chipBackgroundColor: "#dcfce7",
+    chipColor: "#166534",
+  }),
+});
 
 function ConfirmDeleteButton() {
   const { pending } = useFormStatus();
@@ -36,6 +62,7 @@ function ConfirmDeleteButton() {
 export default function NoticeCard({ notice, deleteAction }) {
   const [open, setOpen] = useState(false);
   const created = new Date(notice.created_at);
+  const moodStyle = MOOD_STYLES[notice.mood] ?? MOOD_STYLES[MOODS.NORMAL];
 
   return (
     <Paper
@@ -43,12 +70,14 @@ export default function NoticeCard({ notice, deleteAction }) {
       sx={{
         p: 2.5,
         border: "1px solid",
-        borderColor: "divider",
+        borderLeftWidth: 4,
+        borderColor: moodStyle.borderColor,
+        backgroundColor: moodStyle.backgroundColor,
         transition: "transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
         "&:hover": {
           transform: "translateY(-2px)",
           boxShadow: "0 12px 28px -12px rgba(99,102,241,0.45)",
-          borderColor: "primary.main",
+          borderColor: moodStyle.borderColor,
         },
       }}
     >
@@ -64,11 +93,21 @@ export default function NoticeCard({ notice, deleteAction }) {
           >
             {notice.text}
           </Typography>
+          <Chip
+            size="small"
+            label={`Mood: ${moodStyle.label}`}
+            sx={{
+              mt: 1.25,
+              fontWeight: 700,
+              backgroundColor: moodStyle.chipBackgroundColor,
+              color: moodStyle.chipColor,
+            }}
+          />
           <Stack
             direction="row"
             spacing={0.5}
             alignItems="center"
-            sx={{ mt: 1.25, color: "text.secondary" }}
+            sx={{ mt: 1, color: "text.secondary" }}
           >
             <AccessTimeRoundedIcon sx={{ fontSize: 16 }} />
             <Typography variant="caption">
