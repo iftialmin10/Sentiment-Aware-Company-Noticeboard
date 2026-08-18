@@ -8,6 +8,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import { MAX_NOTICE_LENGTH } from "../lib/noticeContract";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -61,6 +62,7 @@ export default function NoticeForm({ action }) {
             fullWidth
             autoComplete="off"
             size="medium"
+            inputProps={{ maxLength: MAX_NOTICE_LENGTH }}
           />
           <SubmitButton />
         </Stack>

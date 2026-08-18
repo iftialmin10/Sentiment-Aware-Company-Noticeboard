@@ -8,6 +8,13 @@ import Paper from "@mui/material/Paper";
 import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
 import InboxRoundedIcon from "@mui/icons-material/InboxRounded";
 import { pool } from "../lib/db";
+import { classifyNotice } from "../lib/classifyNotice";
+import {
+  classificationWithDefaults,
+  DEFAULT_CLASSIFICATION,
+  isClassification,
+} from "../lib/classificationContract";
+import { normalizeNoticeText } from "../lib/noticeContract";
 import NoticeForm from "./NoticeForm";
 import NoticeCard from "./NoticeCard";
 
@@ -15,8 +22,16 @@ export const dynamic = "force-dynamic";
 
 async function postNotice(formData) {
   "use server";
-  const text = formData.get("text")?.trim();
-  if (text) await pool.query("INSERT INTO notices (text) VALUES ($1)", [text]);
+  const text = normalizeNoticeText(formData.get("text"));
+  const result = await classifyNotice(text);
+  const classification = isClassification(result)
+    ? result
+    : DEFAULT_CLASSIFICATION;
+
+  await pool.query(
+    "INSERT INTO notices (text, mood, urgency) VALUES ($1, $2, $3)",
+    [text, classification.mood, classification.urgency]
+  );
   revalidatePath("/");
 }
 
@@ -27,9 +42,13 @@ async function deleteNotice(formData) {
 }
 
 export default async function Home() {
-  const { rows: notices } = await pool.query(
-    "SELECT id, text, created_at FROM notices ORDER BY created_at DESC"
+  const { rows } = await pool.query(
+    "SELECT id, text, mood, urgency, created_at FROM notices ORDER BY created_at DESC"
   );
+  const notices = rows.map((notice) => ({
+    ...notice,
+    ...classificationWithDefaults(notice),
+  }));
 
   return (
     <Box
