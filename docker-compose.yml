@@ -17,6 +17,7 @@ services:
     build: .
     environment:
       DATABASE_URL: postgres://notes:notes@db:5432/notes
+      GROQ_API_KEY: ${GROQ_API_KEY}
     ports:
       - "3000:3000"
     depends_on:

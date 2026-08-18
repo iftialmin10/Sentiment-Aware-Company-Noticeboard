@@ -2,6 +2,40 @@
 
 A simple noticeboard where anyone can post and delete short notices.
 
+## Groq setup
+
+Copy the example environment file before starting the application:
+
+```sh
+cp .env.example .env
+```
+
+Set `GROQ_API_KEY` in `.env` to a real key from the
+[Groq console](https://console.groq.com/keys). Docker Compose passes this
+variable only to the server-side `web` service. Never prefix it with
+`NEXT_PUBLIC_`, expose it to client components, print it in logs, or commit
+the `.env` file.
+
+After adding or changing the key, rebuild and recreate the web container:
+
+```sh
+docker compose up -d --build --force-recreate web
+```
+
+Confirm that the container received the variable without displaying its
+value:
+
+```sh
+docker compose exec web node -e "console.log(process.env.GROQ_API_KEY ? 'GROQ_API_KEY is configured' : 'GROQ_API_KEY is missing')"
+```
+
+If `GROQ_API_KEY` is missing or contains only whitespace, the server must skip
+the Groq request and classify the notice with the safe defaults `normal` and
+`no rush`. It may write a generic server warning such as `Groq classification
+unavailable`, but must never log the key. The same fallback applies when Groq
+times out, fails, or returns an invalid classification, so a classification
+failure does not prevent a valid notice from being saved.
+
 ## Local database setup
 
 Start the application and PostgreSQL with:
