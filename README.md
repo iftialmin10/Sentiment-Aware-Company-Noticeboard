@@ -1,121 +1,165 @@
 # Company's Sentimental Noticeboard
 
-A simple noticeboard where anyone can post and delete short notices.
+An AI-assisted company noticeboard that classifies each message by mood and urgency. Notices are stored in PostgreSQL and displayed with accessible color cues, labels, and urgency animations.
 
-## Groq setup
+## How it works
 
-Copy the example environment file before starting the application:
+```text
+Browser form
+    -> Next.js Server Action validates the notice
+    -> Groq classifies mood and urgency
+    -> Server validates the classification (or applies safe defaults)
+    -> PostgreSQL stores the notice
+    -> Material UI renders its mood and urgency
+```
+
+The application uses Next.js 14 with the App Router and Server Actions, React 18, Material UI, PostgreSQL 16, and the Groq Chat Completions API. Classification and database access remain server-side; the Groq key is never sent to the browser.
+
+## Prerequisites
+
+- Docker with Docker Compose
+- A [Groq API key](https://console.groq.com/keys) for AI classification (optional; the app has a safe fallback)
+- Node.js 20+ and npm if running tests or the web app outside Docker
+
+## Environment variables
+
+Copy the example file:
 
 ```sh
 cp .env.example .env
 ```
 
-Set `GROQ_API_KEY` in `.env` to a real key from the
-[Groq console](https://console.groq.com/keys). Docker Compose passes this
-variable only to the server-side `web` service. Never prefix it with
-`NEXT_PUBLIC_`, expose it to client components, print it in logs, or commit
-the `.env` file.
+Then configure:
 
-After adding or changing the key, rebuild and recreate the web container:
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | PostgreSQL connection string used by the server. For the included Docker database, use `postgresql://notes:notes@db:5432/notes`. |
+| `GROQ_API_KEY` | No | Server-side Groq credential. If absent or blank, notices use the fallback classification. |
 
-```sh
-docker compose up -d --build --force-recreate web
+Example local Docker configuration:
+
+```dotenv
+DATABASE_URL=postgresql://notes:notes@db:5432/notes
+GROQ_API_KEY=your_groq_api_key
 ```
 
-Confirm that the container received the variable without displaying its
-value:
+Never prefix the Groq key with `NEXT_PUBLIC_`, expose it in client components or logs, or commit `.env`.
 
-```sh
-docker compose exec web node -e "console.log(process.env.GROQ_API_KEY ? 'GROQ_API_KEY is configured' : 'GROQ_API_KEY is missing')"
-```
+## Start with Docker
 
-If `GROQ_API_KEY` is missing or contains only whitespace, the server must skip
-the Groq request and classify the notice with the safe defaults `normal` and
-`no rush`. It may write a generic server warning such as `Groq classification
-unavailable`, but must never log the key. The same fallback applies when Groq
-times out, fails, or returns an invalid classification, so a classification
-failure does not prevent a valid notice from being saved.
-
-Groq requests are limited to five seconds and are not retried. Classification
-failures are logged only as generic operational events, without the API key or
-notice text. The posting UI does not announce fallback classification because
-the notice is still saved successfully; database failures are shown as errors
-and leave the user's text in place for another attempt.
-
-## Testing
-
-Run the repeatable classifier, posting, validation, and presentation tests:
-
-```sh
-npm test
-```
-
-Use `docs/testing-checklist.md` for browser checks that require visual,
-responsive, reduced-motion, keyboard, or screen-reader inspection.
-
-## Local database setup
-
-Start the application and PostgreSQL with:
+Build and start the web application and PostgreSQL:
 
 ```sh
 docker compose up --build
 ```
 
-On a fresh PostgreSQL volume, Docker runs `init.sql` automatically. The
-`notices` table includes non-null `mood` and `urgency` columns, defaults them
-to `normal` and `no rush`, and rejects values outside the classification
-contract.
+Open [http://localhost:3000](http://localhost:3000). To run in the background, add `-d`.
 
-To upgrade an existing database without deleting its notices, run the Phase 2
-migration once while the database service is running:
+After changing environment variables, recreate the web service:
+
+```sh
+docker compose up -d --build --force-recreate web
+```
+
+Verify that the Groq key reached the container without printing it:
+
+```sh
+docker compose exec web node -e "console.log(process.env.GROQ_API_KEY ? 'GROQ_API_KEY is configured' : 'GROQ_API_KEY is missing')"
+```
+
+Stop the services without deleting database data:
+
+```sh
+docker compose down
+```
+
+## Database setup and migrations
+
+For a new `pgdata` volume, PostgreSQL automatically runs `init.sql` and creates the final `notices` schema.
+
+Docker initialization scripts do not run again for an existing volume. If the database predates the mood and urgency columns, start the database and apply the migration once:
 
 ```sh
 docker compose exec -T db psql -U notes -d notes < migrations/002_add_notice_classification.sql
 ```
 
-The migration gives existing rows the safe defaults before enforcing the same
-non-null and check constraints as a fresh installation. Do not rerun this
-one-time migration after it succeeds.
+The migration preserves existing notices, assigns `normal` and `no rush` defaults, and adds database constraints for supported values. Do not rerun it after it succeeds because it is not idempotent.
 
-To deliberately reset the local database and discard all notices instead:
+To intentionally erase all local notices and initialize a clean database:
 
 ```sh
 docker compose down -v
 docker compose up --build
 ```
 
-## Future Specifications
+This deletes the Docker database volume and cannot be undone.
 
-The following describes planned behavior. It is a specification only — no implementation is prescribed here.
+## Classification contract
 
-### Infrastructure
+Mood and urgency are evaluated independently. A positive notice may still be urgent, while a negative notice is not automatically an emergency.
 
-- **Database** — Neon (hosted Postgres).
-- **LLM** — Groq, for free Llama access.
+### Mood
 
-### LLM-derived attributes
+| Value | Meaning | Appearance |
+| --- | --- | --- |
+| `bad` | Negative, unhappy, concerning, angry, disappointing, or critical | Pale red background (`#fff7f7`) and red accent (`#ef9a9a`) |
+| `normal` | Neutral, factual, routine, or emotionally unclear | White background (`#ffffff`) and neutral accent (`#d7dce3`) |
+| `good` | Positive, thankful, encouraging, or celebratory | Pale green background (`#f3fbf5`) and green accent (`#81c995`) |
 
-Every posted note gains two attributes, each inferred by an LLM at posting time:
+Each card also displays a text mood chip, so meaning does not depend on color alone.
 
-- **Mood** — one of: `bad`, `normal`, `good`
-- **Urgency** — one of: `no rush`, `urgent`, `emergency`
+### Urgency
 
-### Mood → note color
+| Value | Meaning | Presentation |
+| --- | --- | --- |
+| `no rush` | No immediate action is required | Static chip |
+| `urgent` | Action is required soon or by a near-term deadline | Heartbeat animation with a 1-second duration |
+| `emergency` | Immediate action is required to prevent serious harm, loss, outage, or disruption | Heartbeat animation with a 0.5-second duration |
 
-The note's color reflects its mood:
+Animations apply only to the urgency chip. They are disabled when the operating system requests reduced motion; the text label remains visible.
 
-| Mood     | Color |
-| -------- | ----- |
-| `bad`    | red   |
-| `normal` | white |
-| `good`   | green |
+## Groq behavior and fallback
 
-### Urgency → note animation
+The server uses Groq's `openai/gpt-oss-120b` model with JSON output and a five-second timeout. Model output is treated as untrusted and accepted only when both fields exactly match the allowed values.
 
-The note's motion reflects its urgency:
+The safe fallback is:
 
-| Urgency     | Animation                            |
-| ----------- | ------------------------------------ |
-| `no rush`   | none                                 |
-| `urgent`    | heartbeat vibration, 1 second delay  |
-| `emergency` | heartbeat vibration, 0.5 second delay |
+```json
+{
+  "mood": "normal",
+  "urgency": "no rush"
+}
+```
+
+The fallback is used when the API key is missing, the request fails or times out, the response is malformed, or it contains unsupported values. Groq requests are not retried, and classification failure does not prevent a valid notice from being saved. Operational warnings exclude the API key and notice text.
+
+Notice text is trimmed, must not be empty, and is limited to 1,000 characters before Groq is called.
+
+## Tests
+
+Install dependencies if needed, then run the automated Node test suite:
+
+```sh
+npm install
+npm test
+```
+
+The suite covers the classification contract, Groq success and fallback paths, input validation, notice posting, database failures, and presentation mappings.
+
+For responsive layout, accessibility, contrast, keyboard, screen-reader, and reduced-motion checks, follow [docs/testing-checklist.md](docs/testing-checklist.md).
+
+To verify a production build:
+
+```sh
+npm run build
+```
+
+## Project structure
+
+```text
+app/          Next.js pages, Server Actions, and Material UI components
+lib/          Database, validation, classification, posting, and presentation logic
+migrations/   SQL migrations for existing databases
+docs/         Classification and manual testing documentation
+init.sql      Schema for new PostgreSQL volumes
+```
