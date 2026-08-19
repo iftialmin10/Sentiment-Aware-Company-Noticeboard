@@ -9,47 +9,21 @@ import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
 import InboxRoundedIcon from "@mui/icons-material/InboxRounded";
 import { pool } from "../lib/db";
 import { classifyNotice } from "../lib/classifyNotice";
-import {
-  classificationWithDefaults,
-  DEFAULT_CLASSIFICATION,
-  isClassification,
-} from "../lib/classificationContract";
-import { normalizeNoticeText } from "../lib/noticeContract";
+import { classificationWithDefaults } from "../lib/classificationContract";
+import { createPostNotice } from "../lib/postNotice";
 import NoticeForm from "./NoticeForm";
 import NoticeCard from "./NoticeCard";
 
 export const dynamic = "force-dynamic";
 
-async function postNotice(_previousState, formData) {
+async function postNotice(previousState, formData) {
   "use server";
-  let text;
-  try {
-    text = normalizeNoticeText(formData.get("text"));
-  } catch (error) {
-    return {
-      status: "error",
-      message: error instanceof Error ? error.message : "Enter a valid notice.",
-    };
-  }
-
-  try {
-    const result = await classifyNotice(text);
-    const classification = isClassification(result) ? result : DEFAULT_CLASSIFICATION;
-    await pool.query(
-      "INSERT INTO notices (text, mood, urgency) VALUES ($1, $2, $3)",
-      [text, classification.mood, classification.urgency]
-    );
-    revalidatePath("/");
-    return { status: "success", message: "" };
-  } catch (error) {
-    console.error("Notice insert failed.", {
-      error: error instanceof Error ? error.name : "UnknownError",
-    });
-    return {
-      status: "error",
-      message: "We couldn't post your notice. Please try again.",
-    };
-  }
+  const action = createPostNotice({
+    classify: classifyNotice,
+    query: pool.query.bind(pool),
+    revalidate: revalidatePath,
+  });
+  return action(previousState, formData);
 }
 
 async function deleteNotice(formData) {

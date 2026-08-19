@@ -19,7 +19,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import { keyframes } from "@mui/material/styles";
-import { MOODS, URGENCIES } from "../lib/classificationContract";
+import { noticePresentation } from "../lib/noticePresentation";
 
 const heartbeat = keyframes`
   0%, 100% { transform: scale(1); }
@@ -28,51 +28,6 @@ const heartbeat = keyframes`
   60% { transform: scale(1.05); }
   80% { transform: scale(1); }
 `;
-
-const MOOD_STYLES = Object.freeze({
-  [MOODS.BAD]: Object.freeze({
-    label: "bad",
-    backgroundColor: "#fff7f7",
-    borderColor: "#ef9a9a",
-    chipBackgroundColor: "#fee4e2",
-    chipColor: "#7a271a",
-  }),
-  [MOODS.NORMAL]: Object.freeze({
-    label: "normal",
-    backgroundColor: "#ffffff",
-    borderColor: "#d7dce3",
-    chipBackgroundColor: "#eef2f6",
-    chipColor: "#344054",
-  }),
-  [MOODS.GOOD]: Object.freeze({
-    label: "good",
-    backgroundColor: "#f3fbf5",
-    borderColor: "#81c995",
-    chipBackgroundColor: "#dcfce7",
-    chipColor: "#166534",
-  }),
-});
-
-const URGENCY_STYLES = Object.freeze({
-  [URGENCIES.NO_RUSH]: Object.freeze({
-    label: "No rush",
-    animationDuration: null,
-    backgroundColor: "#eef2f6",
-    color: "#344054",
-  }),
-  [URGENCIES.URGENT]: Object.freeze({
-    label: "Urgent",
-    animationDuration: "1s",
-    backgroundColor: "#fef0c7",
-    color: "#7a2e0e",
-  }),
-  [URGENCIES.EMERGENCY]: Object.freeze({
-    label: "Emergency",
-    animationDuration: "0.5s",
-    backgroundColor: "#fee4e2",
-    color: "#912018",
-  }),
-});
 
 function ConfirmDeleteButton() {
   const { pending } = useFormStatus();
@@ -92,9 +47,7 @@ function ConfirmDeleteButton() {
 export default function NoticeCard({ notice, deleteAction }) {
   const [open, setOpen] = useState(false);
   const created = new Date(notice.created_at);
-  const moodStyle = MOOD_STYLES[notice.mood] ?? MOOD_STYLES[MOODS.NORMAL];
-  const urgencyStyle =
-    URGENCY_STYLES[notice.urgency] ?? URGENCY_STYLES[URGENCIES.NO_RUSH];
+  const { mood: moodStyle, urgency: urgencyStyle } = noticePresentation(notice);
 
   return (
     <Paper

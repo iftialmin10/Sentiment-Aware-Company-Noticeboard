@@ -42,6 +42,17 @@ notice text. The posting UI does not announce fallback classification because
 the notice is still saved successfully; database failures are shown as errors
 and leave the user's text in place for another attempt.
 
+## Testing
+
+Run the repeatable classifier, posting, validation, and presentation tests:
+
+```sh
+npm test
+```
+
+Use `docs/testing-checklist.md` for browser checks that require visual,
+responsive, reduced-motion, keyboard, or screen-reader inspection.
+
 ## Local database setup
 
 Start the application and PostgreSQL with:
