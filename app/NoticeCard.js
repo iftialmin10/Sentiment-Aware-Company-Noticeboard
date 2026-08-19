@@ -18,7 +18,16 @@ import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
-import { MOODS } from "../lib/classificationContract";
+import { keyframes } from "@mui/material/styles";
+import { MOODS, URGENCIES } from "../lib/classificationContract";
+
+const heartbeat = keyframes`
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.1); }
+  40% { transform: scale(1); }
+  60% { transform: scale(1.05); }
+  80% { transform: scale(1); }
+`;
 
 const MOOD_STYLES = Object.freeze({
   [MOODS.BAD]: Object.freeze({
@@ -44,6 +53,27 @@ const MOOD_STYLES = Object.freeze({
   }),
 });
 
+const URGENCY_STYLES = Object.freeze({
+  [URGENCIES.NO_RUSH]: Object.freeze({
+    label: "No rush",
+    animationDuration: null,
+    backgroundColor: "#eef2f6",
+    color: "#344054",
+  }),
+  [URGENCIES.URGENT]: Object.freeze({
+    label: "Urgent",
+    animationDuration: "1s",
+    backgroundColor: "#fef0c7",
+    color: "#7a2e0e",
+  }),
+  [URGENCIES.EMERGENCY]: Object.freeze({
+    label: "Emergency",
+    animationDuration: "0.5s",
+    backgroundColor: "#fee4e2",
+    color: "#912018",
+  }),
+});
+
 function ConfirmDeleteButton() {
   const { pending } = useFormStatus();
   return (
@@ -63,6 +93,8 @@ export default function NoticeCard({ notice, deleteAction }) {
   const [open, setOpen] = useState(false);
   const created = new Date(notice.created_at);
   const moodStyle = MOOD_STYLES[notice.mood] ?? MOOD_STYLES[MOODS.NORMAL];
+  const urgencyStyle =
+    URGENCY_STYLES[notice.urgency] ?? URGENCY_STYLES[URGENCIES.NO_RUSH];
 
   return (
     <Paper
@@ -93,16 +125,38 @@ export default function NoticeCard({ notice, deleteAction }) {
           >
             {notice.text}
           </Typography>
-          <Chip
-            size="small"
-            label={`Mood: ${moodStyle.label}`}
-            sx={{
-              mt: 1.25,
-              fontWeight: 700,
-              backgroundColor: moodStyle.chipBackgroundColor,
-              color: moodStyle.chipColor,
-            }}
-          />
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            sx={{ mt: 1.25 }}
+          >
+            <Chip
+              size="small"
+              label={`Mood: ${moodStyle.label}`}
+              sx={{
+                fontWeight: 700,
+                backgroundColor: moodStyle.chipBackgroundColor,
+                color: moodStyle.chipColor,
+              }}
+            />
+            <Chip
+              size="small"
+              label={`Urgency: ${urgencyStyle.label}`}
+              sx={{
+                fontWeight: 700,
+                backgroundColor: urgencyStyle.backgroundColor,
+                color: urgencyStyle.color,
+                animation: urgencyStyle.animationDuration
+                  ? `${heartbeat} ${urgencyStyle.animationDuration} ease-in-out infinite`
+                  : "none",
+                "@media (prefers-reduced-motion: reduce)": {
+                  animation: "none",
+                },
+              }}
+            />
+          </Stack>
           <Stack
             direction="row"
             spacing={0.5}

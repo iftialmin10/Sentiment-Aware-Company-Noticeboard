@@ -1,7 +1,8 @@
-// Minimal Groq API test: calls Llama 70B with a fixed prompt.
+// Minimal Groq API test: calls Groq's recommended successor model with a fixed prompt.
 // Set GROQ_API_KEY in .env (see .env.example). Get a key at https://console.groq.com/keys.
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const DEFAULT_MODEL = "openai/gpt-oss-120b";
 
 if (!GROQ_API_KEY) {
   console.error("Missing GROQ_API_KEY. Copy .env.example to .env and add your key.");
@@ -16,7 +17,7 @@ async function main() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: DEFAULT_MODEL,
       messages: [{ role: "user", content: "how are you?" }],
     }),
   });
