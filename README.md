@@ -36,6 +36,12 @@ unavailable`, but must never log the key. The same fallback applies when Groq
 times out, fails, or returns an invalid classification, so a classification
 failure does not prevent a valid notice from being saved.
 
+Groq requests are limited to five seconds and are not retried. Classification
+failures are logged only as generic operational events, without the API key or
+notice text. The posting UI does not announce fallback classification because
+the notice is still saved successfully; database failures are shown as errors
+and leave the user's text in place for another attempt.
+
 ## Local database setup
 
 Start the application and PostgreSQL with:

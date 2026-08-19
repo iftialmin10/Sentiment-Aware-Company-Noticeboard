@@ -20,19 +20,36 @@ import NoticeCard from "./NoticeCard";
 
 export const dynamic = "force-dynamic";
 
-async function postNotice(formData) {
+async function postNotice(_previousState, formData) {
   "use server";
-  const text = normalizeNoticeText(formData.get("text"));
-  const result = await classifyNotice(text);
-  const classification = isClassification(result)
-    ? result
-    : DEFAULT_CLASSIFICATION;
+  let text;
+  try {
+    text = normalizeNoticeText(formData.get("text"));
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Enter a valid notice.",
+    };
+  }
 
-  await pool.query(
-    "INSERT INTO notices (text, mood, urgency) VALUES ($1, $2, $3)",
-    [text, classification.mood, classification.urgency]
-  );
-  revalidatePath("/");
+  try {
+    const result = await classifyNotice(text);
+    const classification = isClassification(result) ? result : DEFAULT_CLASSIFICATION;
+    await pool.query(
+      "INSERT INTO notices (text, mood, urgency) VALUES ($1, $2, $3)",
+      [text, classification.mood, classification.urgency]
+    );
+    revalidatePath("/");
+    return { status: "success", message: "" };
+  } catch (error) {
+    console.error("Notice insert failed.", {
+      error: error instanceof Error ? error.name : "UnknownError",
+    });
+    return {
+      status: "error",
+      message: "We couldn't post your notice. Please try again.",
+    };
+  }
 }
 
 async function deleteNotice(formData) {

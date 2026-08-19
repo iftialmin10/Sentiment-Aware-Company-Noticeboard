@@ -31,21 +31,21 @@ const heartbeat = keyframes`
 
 const MOOD_STYLES = Object.freeze({
   [MOODS.BAD]: Object.freeze({
-    label: "Negative",
+    label: "bad",
     backgroundColor: "#fff7f7",
     borderColor: "#ef9a9a",
     chipBackgroundColor: "#fee4e2",
     chipColor: "#7a271a",
   }),
   [MOODS.NORMAL]: Object.freeze({
-    label: "Neutral",
+    label: "normal",
     backgroundColor: "#ffffff",
     borderColor: "#d7dce3",
     chipBackgroundColor: "#eef2f6",
     chipColor: "#344054",
   }),
   [MOODS.GOOD]: Object.freeze({
-    label: "Positive",
+    label: "good",
     backgroundColor: "#f3fbf5",
     borderColor: "#81c995",
     chipBackgroundColor: "#dcfce7",
