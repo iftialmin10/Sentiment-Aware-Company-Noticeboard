@@ -2,6 +2,9 @@
 
 A workplace noticeboard that does more than display messages: it understands their tone. Each notice is classified by mood and urgency, then presented with accessible labels, color cues, and motion so important updates stand out without losing context.
 
+## Live Link https://company-s-sentimental-noticeboard.onrender.com/
+
+## Video Link https://www.youtube.com/watch?v=_2vUJDH207c
 [![Watch the project demo](https://img.youtube.com/vi/_2vUJDH207c/maxresdefault.jpg)](https://www.youtube.com/watch?v=_2vUJDH207c)
 
 ## Features of this App
