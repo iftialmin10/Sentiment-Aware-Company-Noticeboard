@@ -11,6 +11,30 @@ A workplace noticeboard that does more than display messages: it understands the
 - Validates AI output and falls back safely when classification is unavailable.
 - Communicates meaning with text as well as color and respects reduced-motion preferences.
 
+## Classification contract
+
+Mood and urgency are evaluated independently. A positive notice may still be urgent, while a negative notice is not automatically an emergency.
+
+### Mood
+
+| Value | Meaning | Appearance |
+| --- | --- | --- |
+| `bad` | Negative, unhappy, concerning, angry, disappointing, or critical | Pale red background (`#fff7f7`) and red accent (`#ef9a9a`) |
+| `normal` | Neutral, factual, routine, or emotionally unclear | White background (`#ffffff`) and neutral accent (`#d7dce3`) |
+| `good` | Positive, thankful, encouraging, or celebratory | Pale green background (`#f3fbf5`) and green accent (`#81c995`) |
+
+Each card also displays a text mood chip, so meaning does not depend on color alone.
+
+### Urgency
+
+| Value | Meaning | Presentation |
+| --- | --- | --- |
+| `no rush` | No immediate action is required | Static chip |
+| `urgent` | Action is required soon or by a near-term deadline | Heartbeat animation with a 1-second duration |
+| `emergency` | Immediate action is required to prevent serious harm, loss, outage, or disruption | Heartbeat animation with a 0.5-second duration |
+
+Animations apply only to the urgency chip. They are disabled when the operating system requests reduced motion; the text label remains visible.
+
 ## Built with
 
 Next.js 14 | React 18 | Material UI | PostgreSQL 16 | Groq API | Docker
