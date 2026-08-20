@@ -4,7 +4,7 @@ A workplace noticeboard that does more than display messages: it understands the
 
 [![Watch the project demo](https://img.youtube.com/vi/_2vUJDH207c/maxresdefault.jpg)](https://www.youtube.com/watch?v=_2vUJDH207c)
 
-## Why it stands out
+## Features of this App
 
 - Separates **mood** from **urgency**, so a positive announcement can still demand immediate action.
 - Keeps AI and database operations server-side, protecting credentials and application data.
