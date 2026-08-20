@@ -2,6 +2,8 @@
 
 An AI-assisted company noticeboard that classifies each message by mood and urgency. Notices are stored in PostgreSQL and displayed with accessible color cues, labels, and urgency animations.
 
+[![Watch the video](https://img.youtube.com/vi/_2vUJDH207c/maxresdefault.jpg)](https://www.youtube.com/watch?v=_2vUJDH207c)
+
 ## How it works
 
 ```text
