@@ -68,7 +68,7 @@ export default async function Home() {
           </Box>
           <Box>
             <Typography variant="h1" sx={{ fontSize: { xs: "1.6rem", sm: "2rem" } }}>
-              Company&apos;s Sentimental Noticeboard
+              Sentiment-Aware Company Noticeboard
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Post a quick message for everyone to see.
